@@ -16,7 +16,7 @@ import javax.sql.DataSource;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
     // Authentication : User --> Roles
     @Override
-    protected void configure(AuthenticationManagerBuilder auth)
+    protected void configure(final AuthenticationManagerBuilder auth)
             throws Exception {
         auth.inMemoryAuthentication()
                 .passwordEncoder(new BCryptPasswordEncoder())
@@ -29,14 +29,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     // Authorization : Role -> Access
     @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http.httpBasic()
-                .and()
-                .authorizeRequests()
+    protected void configure(final HttpSecurity http) throws Exception {
+        http
+                .httpBasic()
+
+                .and().authorizeRequests()
                 .antMatchers("/api/register").permitAll()
                 .antMatchers("/api/*").hasRole("USER")
-                .and()
-                .csrf().disable().headers().frameOptions().disable();
+                .antMatchers("/actuator/shutdown").permitAll()
+
+                .and().csrf().disable()
+                .headers().frameOptions().disable();
     }
 
     @Bean

@@ -25,6 +25,23 @@ files:
         implementation 'org.springframework.boot:spring-boot-starter-web'
     }
   learner_created: false
+- name: src/engine/WebQuizEngine.java
+  visible: true
+  text: |
+    package engine;
+
+    import org.springframework.boot.SpringApplication;
+    import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+    @SpringBootApplication
+    public class WebQuizEngine {
+
+        public static void main(String[] args) {
+            SpringApplication.run(WebQuizEngine.class, args);
+        }
+
+    }
+  learner_created: false
 - name: src/resources/application.properties
   visible: true
   text: |
@@ -224,232 +241,6 @@ files:
         }
     }
   learner_created: false
-- name: src/engine/Option.java
-  visible: true
-  text: |
-    package engine;
-
-    import com.fasterxml.jackson.annotation.JsonProperty;
-    import lombok.Getter;
-    import lombok.NoArgsConstructor;
-    import lombok.Setter;
-
-    import javax.persistence.*;
-
-    @Entity
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    public class Option {
-        @Id
-        @GeneratedValue
-        private Long id;
-
-        private String text;
-
-        @ManyToOne
-        @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-        @JoinColumn(name="quiz_id")
-        private Quiz quiz;
-
-        public Option(String text) {
-            this.text = text;
-        }
-
-        @Override
-        public String toString() {
-            return "Option{" +
-                    "id=" + id +
-                    ", text='" + text + '\'' +
-                    ", quiz=" + quiz +
-                    '}';
-        }
-    }
-  learner_created: true
-- name: src/engine/QuizRepository.java
-  visible: true
-  text: |
-    package engine;
-
-
-    import org.springframework.data.repository.CrudRepository;
-
-    import java.util.Optional;
-
-    public interface QuizRepository extends CrudRepository<Quiz, Long> {
-        Optional<Quiz> findByTitle(String title);
-    }
-  learner_created: true
-- name: src/engine/OptionRepository.java
-  visible: true
-  text: |
-    package engine;
-
-    import org.springframework.data.repository.CrudRepository;
-
-    public interface OptionRepository extends CrudRepository<Option, Long> {
-    }
-  learner_created: true
-- name: src/engine/Quiz.java
-  visible: true
-  text: |
-    package engine;
-
-    import com.fasterxml.jackson.annotation.JsonProperty;
-    import lombok.Getter;
-    import lombok.Setter;
-
-    import javax.persistence.Entity;
-    import javax.persistence.GeneratedValue;
-    import javax.persistence.Id;
-    import javax.validation.constraints.NotEmpty;
-    import javax.validation.constraints.NotNull;
-    import java.util.Arrays;
-
-    @Entity
-    public class Quiz {
-        @Id
-        @GeneratedValue
-        @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-        private Long id;
-
-        @NotNull
-        @NotEmpty
-        private String title;
-
-        private String text;
-
-        private String opcoes;
-    /*    @OneToMany(mappedBy = "quiz")
-        private List<Option> options;*/
-
-        public Quiz(String title, String text, String opcoes) {
-            this.title = title;
-            this.text = text;
-            this.opcoes = opcoes;
-        }
-
-        public String[] getOptions() {
-            var op = this.opcoes.split("\\s*,\\s*");
-            return op;
-        }
-
-    /*    @Override
-        public String toString() {
-            return "Quiz{" +
-                    "id=" + id +
-                    ", title='" + title + '\'' +
-                    ", text='" + text + '\'' +
-                    ", options='" + Arrays.toString(getOptions()) + '\'' +
-                    '}';
-        }*/
-
-        public Quiz() {
-
-        }
-        public Quiz(Long id, String title, String text, String opcoes) {
-            this.id = id;
-            this.title = title;
-            this.text = text;
-            this.opcoes = opcoes;
-        }
-
-        public Long getId() {
-            return id;
-        }
-
-        public void setId(Long id) {
-            this.id = id;
-        }
-
-        public String getTitle() {
-            return title;
-        }
-
-        public void setTitle(String title) {
-            this.title = title;
-        }
-
-        public String getText() {
-            return text;
-        }
-
-        public void setText(String text) {
-            this.text = text;
-        }
-    }
-  learner_created: true
-- name: src/engine/WebQuizEngine.java
-  visible: true
-  text: |
-    package engine;
-
-    import org.springframework.boot.SpringApplication;
-    import org.springframework.boot.autoconfigure.SpringBootApplication;
-
-    @SpringBootApplication
-    public class WebQuizEngine {
-
-        public static void main(String[] args) {
-            SpringApplication.run(WebQuizEngine.class, args);
-        }
-
-    }
-  learner_created: false
-- name: src/engine/QuizController.java
-  visible: true
-  text: |
-    package engine;
-
-    import org.springframework.beans.factory.annotation.Autowired;
-    import org.springframework.stereotype.Controller;
-    import org.springframework.web.bind.annotation.*;
-
-    import java.util.Arrays;
-    import java.util.HashMap;
-    import java.util.Map;
-    import java.util.Optional;
-
-    @Controller
-    @RestController
-    @RequestMapping("/api/quiz")
-    public class QuizController {
-        @Autowired
-        QuizRepository quizRepository;
-
-        @GetMapping("")
-        /*public Optional<Quiz> getQuizes() {
-            return quizRepository.findByTitle("The Java Logo");
-        }*/
-        public Map<String, Object> getQuizes() {
-            var resposta = new HashMap<String, Object>();
-            var quiz = quizRepository.findByTitle("The Java Logo").get();
-            resposta.put("title", quiz.getTitle());
-            resposta.put("text", quiz.getText());
-            resposta.put("options", quiz.getOptions());
-            return resposta;
-        }
-
-        @PostMapping("")
-        public Map<String, Object> postar(@RequestParam Map<String, String> mapa) {
-            var value = mapa.get("answer");
-            var intValue = Integer.parseInt(value);
-            Map<String, Object> resposta = new HashMap<>();
-            if (intValue == 2) {
-                resposta.put("success", true);
-                resposta.put("feedback", "Congratulations, you're right!");
-            } else {
-                resposta.put("success", false);
-                resposta.put("feedback", "Wrong answer! Please, try again.");
-            }
-            return resposta;
-        }
-
-    }
-  learner_created: true
 feedback_link: https://hyperskill.org/projects/91/stages/505/implement#comment
 status: Solved
-feedback:
-  message: Congratulations!
-  time: Tue, 20 Jul 2021 02:10:19 UTC
 record: 2

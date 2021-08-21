@@ -23,6 +23,9 @@ public class QuizController {
     @Autowired
     QuizRepository quizRepository;
 
+    @Autowired
+    UserRepository userRepository;
+
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @GetMapping("/quizzes")
@@ -40,6 +43,11 @@ public class QuizController {
     public Optional<Quiz> post(@Valid @RequestBody Quiz quiz) {
 //        logger.info("{}", quiz != null ? quiz : "null");
         return Optional.ofNullable(quizRepository.save(quiz));
+    }
+
+    @DeleteMapping("/quizzes/{id}")
+    public void deletar(@PathVariable @Min(1) Long id) {
+        quizRepository.deleteById(id);
     }
 
     @PostMapping("/quizzes/{id}/solve")
@@ -72,7 +80,10 @@ public class QuizController {
     }
 
     @PostMapping("/register")
-    ResponseEntity register(@RequestBody Map<String, String> map) {
+    public ResponseEntity register(@Valid @RequestBody final User user) {
+        var existsEmail = userRepository.findByEmailAllIgnoreCase(user.getEmail()).isPresent();
+
+        var savedUser = userRepository.save(user);
         return ResponseEntity.ok().build();
     }
 
