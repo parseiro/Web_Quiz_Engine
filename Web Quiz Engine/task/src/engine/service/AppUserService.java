@@ -1,7 +1,8 @@
-package engine;
+package engine.service;
 
+import engine.repository.AppUserRepository;
+import engine.entity.AppUser;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;

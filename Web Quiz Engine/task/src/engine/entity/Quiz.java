@@ -1,12 +1,11 @@
-package engine;
+package engine.entity;
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.micrometer.core.lang.Nullable;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -14,6 +13,7 @@ import java.util.stream.Collectors;
 @Entity
 public class Quiz {
     @Id
+//    @Nullable
     @GeneratedValue
     private Long id;
 

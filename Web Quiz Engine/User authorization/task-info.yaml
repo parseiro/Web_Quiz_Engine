@@ -659,45 +659,6 @@ files:
         }
     }
   learner_created: false
-- name: src/engine/Option.java
-  visible: true
-  text: |
-    package engine;
-
-    import com.fasterxml.jackson.annotation.JsonProperty;
-
-    import javax.persistence.*;
-
-    @Entity
-    public class Option {
-        @Id
-        @GeneratedValue
-        private Long id;
-
-        private String text;
-
-        @ManyToOne
-        @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-        @JoinColumn(name="quiz_id")
-        private Quiz quiz;
-
-        public Option(String text) {
-            this.text = text;
-        }
-
-        public Option() {
-        }
-
-        @Override
-        public String toString() {
-            return "Option{" +
-                    "id=" + id +
-                    ", text='" + text + '\'' +
-                    ", quiz=" + quiz +
-                    '}';
-        }
-    }
-  learner_created: true
 - name: src/engine/QuizRepository.java
   visible: true
   text: |
@@ -710,16 +671,6 @@ files:
 
     public interface QuizRepository extends CrudRepository<Quiz, Long> {
         Optional<Quiz> findByTitle(String title);
-    }
-  learner_created: true
-- name: src/engine/OptionRepository.java
-  visible: true
-  text: |
-    package engine;
-
-    import org.springframework.data.repository.CrudRepository;
-
-    public interface OptionRepository extends CrudRepository<Option, Long> {
     }
   learner_created: true
 - name: src/engine/Quiz.java
@@ -961,6 +912,12 @@ files:
   visible: true
   learner_created: true
 - name: src/engine/NewUserDto.java
+  visible: true
+  learner_created: true
+- name: src/engine/UserRepository.java
+  visible: true
+  learner_created: true
+- name: src/engine/User.java
   visible: true
   learner_created: true
 feedback_link: https://hyperskill.org/projects/91/stages/508/implement#comment

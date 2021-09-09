@@ -1,4 +1,4 @@
-package engine;
+package engine.entity;
 
 import org.hibernate.validator.constraints.Length;
 
