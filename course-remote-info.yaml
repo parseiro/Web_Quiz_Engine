@@ -3,7 +3,7 @@ hyperskill_project:
   ide_files: https://stepik.org/media/attachments/lesson/287312/additional_files.json
   is_template_based: false
   use_ide: true
-update_date: Sat, 21 Aug 2021 18:42:38 UTC
+update_date: Thu, 09 Sep 2021 11:39:30 UTC
 stages:
 - id: 504
   step: 8252
@@ -19,7 +19,7 @@ stages:
   is_completed: true
 - id: 508
   step: 8256
-  is_completed: false
+  is_completed: true
 - id: 509
   step: 8257
   is_completed: false
@@ -41,10 +41,6 @@ topics:
     theory_id: 13991
   - title: Data structures
     theory_id: 5161
-  - title: Fixed-size array
-    theory_id: 7255
-  - title: Dynamic array
-    theory_id: 5357
   - title: World Wide Web
     theory_id: 6633
   - title: HyperText Transfer Protocol
@@ -161,6 +157,10 @@ topics:
     theory_id: 7427
   - title: IntelliJ IDEA
     theory_id: 3801
+  - title: Fixed-size array
+    theory_id: 7255
+  - title: Dynamic array
+    theory_id: 5357
   - title: Web development
     theory_id: 13931
   - title: Command line overview
@@ -225,23 +225,7 @@ topics:
     theory_id: 3622
   - title: Objects
     theory_id: 4727
-  - title: Static members
-    theory_id: 3534
-  - title: Hiding and overriding
-    theory_id: 3572
-  - title: Interface
-    theory_id: 3615
-  - title: Comparable
-    theory_id: 14456
-  - title: Boxing and unboxing
-    theory_id: 3595
   1:
-  - title: 'Hashing: overview'
-    theory_id: 9831
-  - title: Hash function
-    theory_id: 10878
-  - title: Hash table
-    theory_id: 13054
   - title: Spring beans
     theory_id: 14641
   - title: Spring components
@@ -254,6 +238,12 @@ topics:
     theory_id: 3570
   - title: Exception handling
     theory_id: 3552
+  - title: 'Hashing: overview'
+    theory_id: 9831
+  - title: Hash function
+    theory_id: 10878
+  - title: Hash table
+    theory_id: 13054
   - title: The Set interface
     theory_id: 3575
   - title: The Map interface
@@ -321,6 +311,8 @@ topics:
     theory_id: 13856
   - title: Authentication
     theory_id: 14353
+  - title: Authorization
+    theory_id: 15269
   - title: Authentication and Authorization
     theory_id: 14219
   - title: Polymorphism

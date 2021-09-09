@@ -1,10 +1,12 @@
 package engine;
 
+import org.apache.coyote.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -24,9 +26,12 @@ public class QuizController {
     QuizRepository quizRepository;
 
     @Autowired
-    UserRepository userRepository;
+    AppUserService appUserService;
 
-    Logger logger = LoggerFactory.getLogger(this.getClass());
+    @Autowired
+    AppUserRepository appUserRepository;
+
+    Logger log = LoggerFactory.getLogger(this.getClass());
 
     @GetMapping("/quizzes")
     public Iterable<Quiz> getAllQuizes() {
@@ -42,16 +47,43 @@ public class QuizController {
     @PostMapping("/quizzes")
     public Optional<Quiz> post(@Valid @RequestBody Quiz quiz) {
 //        logger.info("{}", quiz != null ? quiz : "null");
+
+        var username = SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
+        var user = appUserRepository.findUserByUsername(username).get();
+
+        log.info("Criando um quiz com username " + username + " e user " + user);
+
+        quiz.setAuthor(user);
+
         return Optional.ofNullable(quizRepository.save(quiz));
     }
 
     @DeleteMapping("/quizzes/{id}")
-    public void deletar(@PathVariable @Min(1) Long id) {
+    public ResponseEntity delete(@PathVariable Long id) {
+        var quizOptional = quizRepository.findById(id);
+
+        if (quizOptional.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        var quiz = quizOptional.get();
+
+        var author = quiz.getAuthor();
+
+        var currentUsername = SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
+
+        if (author == null || !currentUsername.equalsIgnoreCase(author.getUsername())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
         quizRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/quizzes/{id}/solve")
     public Map<String, Object> solve(@PathVariable @Min(1) Long id, @RequestBody Map<String, List<Integer>> map) {
+//        log.info("Solve quizz id " + id + " with data " + map);
+
         var quiz = quizRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
@@ -80,11 +112,26 @@ public class QuizController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity register(@Valid @RequestBody final User user) {
-        var existsEmail = userRepository.findByEmailAllIgnoreCase(user.getEmail()).isPresent();
+    ResponseEntity register(@RequestBody @Valid NewUserDto nud) {
+        String username = nud.getEmail();
+        String password = nud.getPassword();
 
-        var savedUser = userRepository.save(user);
+        if (username == null || !username.contains("@") || !username.contains(".")
+                || password == null || password.length() < 5)
+            return ResponseEntity.badRequest().build();
+
+        try {
+            appUserService.register(username, password);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/users")
+    public List<AppUser> users() {
+        return appUserService.userList();
     }
 
 

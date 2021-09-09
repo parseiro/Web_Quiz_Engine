@@ -1,6 +1,30 @@
 type: edu
 custom_name: stage5
 files:
+- name: build.gradle
+  visible: true
+  text: |
+    plugins {
+        id 'org.springframework.boot' version '2.2.2.RELEASE'
+        id 'java'
+    }
+
+    apply plugin: 'io.spring.dependency-management'
+
+    sourceCompatibility = 11
+
+    repositories {
+        mavenCentral()
+    }
+
+    sourceSets.main.resources.srcDirs = ["src/resources"]
+
+    dependencies {
+        implementation 'org.springframework.boot:spring-boot-starter'
+        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+    }
+  learner_created: false
 - name: src/engine/WebQuizEngine.java
   visible: true
   text: |
@@ -635,97 +659,313 @@ files:
         }
     }
   learner_created: false
-- name: build.gradle
+- name: src/engine/Option.java
   visible: true
   text: |
-    plugins {
-        id 'org.springframework.boot' version '2.2.2.RELEASE'
-        id 'java'
+    package engine;
+
+    import com.fasterxml.jackson.annotation.JsonProperty;
+
+    import javax.persistence.*;
+
+    @Entity
+    public class Option {
+        @Id
+        @GeneratedValue
+        private Long id;
+
+        private String text;
+
+        @ManyToOne
+        @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+        @JoinColumn(name="quiz_id")
+        private Quiz quiz;
+
+        public Option(String text) {
+            this.text = text;
+        }
+
+        public Option() {
+        }
+
+        @Override
+        public String toString() {
+            return "Option{" +
+                    "id=" + id +
+                    ", text='" + text + '\'' +
+                    ", quiz=" + quiz +
+                    '}';
+        }
     }
-
-    apply plugin: 'io.spring.dependency-management'
-
-    sourceCompatibility = 11
-
-    repositories {
-        mavenCentral()
-    }
-
-    sourceSets.main.resources.srcDirs = ["src/resources"]
-
-    dependencies {
-        implementation 'org.springframework.boot:spring-boot-starter'
-        implementation 'org.springframework.boot:spring-boot-starter-actuator'
-        implementation 'org.springframework.boot:spring-boot-starter-web'
-    }
-  learner_created: false
-- name: src/engine/QuizController.java
-  visible: true
-  learner_created: true
-- name: src/engine/Quiz.java
-  visible: true
-  learner_created: true
-- name: src/engine/User.java
-  visible: true
   learner_created: true
 - name: src/engine/QuizRepository.java
   visible: true
+  text: |
+    package engine;
+
+
+    import org.springframework.data.repository.CrudRepository;
+
+    import java.util.Optional;
+
+    public interface QuizRepository extends CrudRepository<Quiz, Long> {
+        Optional<Quiz> findByTitle(String title);
+    }
   learner_created: true
-- name: src/engine/UserRepository.java
+- name: src/engine/OptionRepository.java
   visible: true
+  text: |
+    package engine;
+
+    import org.springframework.data.repository.CrudRepository;
+
+    public interface OptionRepository extends CrudRepository<Option, Long> {
+    }
+  learner_created: true
+- name: src/engine/Quiz.java
+  visible: true
+  text: |
+    package engine;
+
+    import com.fasterxml.jackson.annotation.JsonAnyGetter;
+    import com.fasterxml.jackson.annotation.JsonProperty;
+
+    import javax.persistence.Entity;
+    import javax.persistence.GeneratedValue;
+    import javax.persistence.Id;
+    import javax.validation.constraints.NotEmpty;
+    import javax.validation.constraints.NotNull;
+    import javax.validation.constraints.Pattern;
+    import javax.validation.constraints.Size;
+    import java.util.Arrays;
+    import java.util.stream.Collectors;
+
+    @Entity
+    public class Quiz {
+        @Id
+        @GeneratedValue
+        private Long id;
+
+        @NotNull
+        @NotEmpty
+        private String title;
+
+        @NotNull
+        @NotEmpty
+        private String text;
+
+        @NotNull
+        @Size(min = 2)
+        private String[] options;
+
+        public String[] getOptions() {
+            return options;
+        }
+
+        public void setOptions(String[] options) {
+            this.options = options;
+        }
+
+        /*@NotNull
+        @NotEmpty
+        @Pattern(regexp = "[^,]{1,50}, [^,]{1,50}.*", message = "At least two items") // at least two items
+        private String options;
+
+        public String[] getOptions() {
+            return this.options == null ?
+                    null :
+                    this.options.split("\\s*,\\s*");
+        }
+
+        public void setOptions(String... options) {
+            this.options = String.join(", ", options);
+        }*/
+
+        //    @Pattern(regexp = "\\[\\d*(,|, )?\\]")
+        @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+        private String answer;
+
+        public Integer[] getAnswer() {
+    //        System.out.printf("Processando a resposta: '%s'%n", this.answer);
+            return this.answer == null ? new Integer[0] :
+                    java.util.regex.Pattern.compile("\\s*,\\s*")
+                            .splitAsStream(this.answer)
+                            .filter(s -> !s.isBlank())
+    //                        .peek(x -> System.out.println("Convertendo '" + x +"' em int"))
+                            .map(x -> Integer.valueOf(x))
+                            .toArray(Integer[]::new);
+
+        }
+
+        public void setAnswer(Integer... answer) {
+            if (answer == null) {
+                this.answer = "";
+            } else {
+                this.answer = Arrays.stream(answer)
+                        .map(i -> i.toString())
+                        .collect(Collectors.joining(", "));
+            }
+
+    //        System.err.println("Answer: '" + this.answer + "'");
+        }
+
+    /*    public Quiz(String title, String text, String options) {
+            this.title = title;
+            this.text = text;
+            this.options = options;
+        }*/
+
+
+
+        @Override
+        public String toString() {
+            return "Quiz{" +
+                    "id=" + id +
+                    ", title='" + title + '\'' +
+                    ", text='" + text + '\'' +
+                    ", options='" + getOptions() + '\'' +
+                    '}';
+        }
+
+        public Quiz() {
+        }
+
+    /*    public Quiz(Long id, String title, String text, String options) {
+            this.id = id;
+            this.title = title;
+            this.text = text;
+            this.options = options;
+        }*/
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public String getTitle() {
+            return title;
+        }
+
+        public void setTitle(String title) {
+            this.title = title;
+        }
+
+        public String getText() {
+            return text;
+        }
+
+        public void setText(String text) {
+            this.text = text;
+        }
+    }
+  learner_created: true
+- name: src/engine/QuizController.java
+  visible: true
+  text: |
+    package engine;
+
+    import org.slf4j.Logger;
+    import org.slf4j.LoggerFactory;
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.http.HttpStatus;
+    import org.springframework.http.ResponseEntity;
+    import org.springframework.stereotype.Controller;
+    import org.springframework.validation.annotation.Validated;
+    import org.springframework.web.bind.annotation.*;
+    import org.springframework.web.server.ResponseStatusException;
+
+    import javax.validation.ConstraintViolationException;
+    import javax.validation.Valid;
+    import javax.validation.constraints.Min;
+    import java.util.*;
+
+    @Controller
+    @RestController
+    @RequestMapping("/api")
+    @Validated
+    public class QuizController {
+        @Autowired
+        QuizRepository quizRepository;
+
+        Logger logger = LoggerFactory.getLogger(this.getClass());
+
+        @GetMapping("/quizzes")
+        public Iterable<Quiz> getAllQuizes() {
+            return quizRepository.findAll();
+        }
+
+        @GetMapping("/quizzes/{id}")
+        public Quiz getQuizesById(@PathVariable("id") @Min(1) Long id) {
+            return quizRepository.findById(id)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        }
+
+        @PostMapping("/quizzes")
+        public Optional<Quiz> post(@Valid @RequestBody Quiz quiz) {
+    //        logger.info("{}", quiz != null ? quiz : "null");
+            return Optional.ofNullable(quizRepository.save(quiz));
+        }
+
+        @PostMapping("/quizzes/{id}/solve")
+        public Map<String, Object> solve(@PathVariable @Min(1) Long id, @RequestBody Map<String, List<Integer>> map) {
+            var quiz = quizRepository.findById(id)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+            var answer = map.get("answer");
+    //        System.err.println("Objeto tipo: " + answer.getClass());
+            Set<Integer> answerSet = Set.of(answer.toArray(Integer[]::new));
+    //        var answerSet = Set.of(answer.toString().split("^\\[\\s*|\\s*,\\s*|\\s*\\]"));
+    //        System.err.println("Resposta parseada: " + answerSet);
+
+            Map<String, Object> resposta = new HashMap<>();
+
+            if (answerSet.equals(Set.of(quiz.getAnswer()))) {
+                resposta.put("success", true);
+                resposta.put("feedback", "Congratulations, you're right!");
+            } else {
+                resposta.put("success", false);
+                resposta.put("feedback", "Wrong answer! Please, try again.");
+            }
+            return resposta;
+
+        }
+
+        @ExceptionHandler(ConstraintViolationException.class)
+        @ResponseStatus(HttpStatus.BAD_REQUEST)
+        ResponseEntity<String> handleConstraintViolationException(ConstraintViolationException e) {
+            return new ResponseEntity<>("not valid due to validation error: " + e.getLocalizedMessage(), HttpStatus.BAD_REQUEST);
+        }
+
+
+    }
   learner_created: true
 - name: src/engine/SecurityConfig.java
   visible: true
   learner_created: true
+- name: src/engine/AppUser.java
+  visible: true
+  learner_created: true
+- name: src/engine/AppUserRepository.java
+  visible: true
+  learner_created: true
+- name: src/engine/AuthenticationProviderService.java
+  visible: true
+  learner_created: true
+- name: src/engine/UserController.java
+  visible: true
+  learner_created: true
+- name: src/engine/AppUserService.java
+  visible: true
+  learner_created: true
+- name: src/engine/NewUserDto.java
+  visible: true
+  learner_created: true
 feedback_link: https://hyperskill.org/projects/91/stages/508/implement#comment
-status: Failed
+status: Solved
 feedback:
-  message: |-
-    Wrong answer in test #4
-
-    POST /api/register should respond with status code 400, responded: 200
-
-    Response body:
-
-    Please find below the output of your program during this failed test.
-
-    ---
-
-    .   ____          _            __ _ _
-     /\\ / ___&#39;_ __ _ _(_)_ __  __ _ \ \ \ \
-    ( ( )\___ | &#39;_ | &#39;_| | &#39;_ \/ _` | \ \ \ \
-     \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
-      &#39;  |____| .__|_| |_|_| |_\__, | / / / /
-     =========|_|==============|___/=/_/_/_/
-     :: Spring Boot ::        (v2.2.2.RELEASE)
-
-    2021-08-21 17:57:13.479  INFO 3732 --- [    Test worker] engine.WebQuizEngine                     : Starting WebQuizEngine on Sala-laptop with PID 3732 (started by leopi in C:\Users\leopi\ideaprojects\Web Quiz Engine1\Web Quiz Engine\task)
-    2021-08-21 17:57:13.501  INFO 3732 --- [    Test worker] engine.WebQuizEngine                     : No active profile set, falling back to default profiles: default
-    2021-08-21 17:57:16.840  INFO 3732 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-    2021-08-21 17:57:17.037  INFO 3732 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 163ms. Found 2 JPA repository interfaces.
-    2021-08-21 17:57:18.059  INFO 3732 --- [    Test worker] trationDelegate$BeanPostProcessorChecker : Bean &#39;org.springframework.transaction.annotation.ProxyTransactionManagementConfiguration&#39; of type [org.springframework.transaction.annotation.ProxyTransactionManagementConfiguration] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying)
-    2021-08-21 17:57:19.901  INFO 3732 --- [    Test worker] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8889 (http)
-    2021-08-21 17:57:19.987  INFO 3732 --- [    Test worker] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
-    2021-08-21 17:57:19.992  INFO 3732 --- [    Test worker] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.29]
-    2021-08-21 17:57:20.465  INFO 3732 --- [    Test worker] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
-    2021-08-21 17:57:20.466  INFO 3732 --- [    Test worker] o.s.web.context.ContextLoader            : Root WebApplicationContext: initialization completed in 6727 ms
-    2021-08-21 17:57:20.931  INFO 3732 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
-    2021-08-21 17:57:21.666  INFO 3732 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
-    2021-08-21 17:57:21.688  INFO 3732 --- [    Test worker] o.s.b.a.h2.H2ConsoleAutoConfiguration    : H2 console available at &#39;/h2-console&#39;. Database available at &#39;jdbc:h2:file:../quizdb&#39;
-    2021-08-21 17:57:23.138  INFO 3732 --- [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
-    2021-08-21 17:57:23.791  INFO 3732 --- [    Test worker] org.hibernate.Version                    : HHH000412: Hibernate Core {5.4.9.Final}
-    2021-08-21 17:57:24.497  INFO 3732 --- [    Test worker] o.hibernate.annotations.common.Version   : HCANN000001: Hibernate Commons Annotations {5.1.0.Final}
-    2021-08-21 17:57:25.058  INFO 3732 --- [    Test worker] org.hibernate.dialect.Dialect            : HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
-    2021-08-21 17:57:28.277  INFO 3732 --- [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000490: Using JtaPlatform implementation: [org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform]
-    2021-08-21 17:57:28.313  INFO 3732 --- [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit &#39;default&#39;
-    2021-08-21 17:57:31.584  WARN 3732 --- [    Test worker] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
-    2021-08-21 17:57:32.540  INFO 3732 --- [    Test worker] o.s.s.concurrent.ThreadPoolTaskExecutor  : Initializing ExecutorService &#39;applicationTaskExecutor&#39;
-    2021-08-21 17:57:33.972  INFO 3732 --- [    Test worker] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 14 endpoint(s) beneath base path &#39;/actuator&#39;
-    2021-08-21 17:57:34.208  INFO 3732 --- [    Test worker] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8889 (http) with context path &#39;&#39;
-    2021-08-21 17:57:34.213  INFO 3732 --- [    Test worker] engine.WebQuizEngine                     : Started WebQuizEngine in 22.666 seconds (JVM running for 25.934)
-    2021-08-21 17:57:37.070  INFO 3732 --- [nio-8889-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet &#39;dispatcherServlet&#39;
-    2021-08-21 17:57:37.075  INFO 3732 --- [nio-8889-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet &#39;dispatcherServlet&#39;
-    2021-08-21 17:57:37.106  INFO 3732 --- [nio-8889-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 29 ms
-    2021-08-21 17:57:39.283  WARN 3732 --- [nio-8889-exec-2] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.web.bind.MethodArgumentNotValidException: Validation failed for argument [0] in public org.springframework.http.ResponseEntity engine.QuizController.register(engine.User): [Field error in object &#39;user&#39; on field &#39;email&#39;: rejected value [google.com]; codes [Email.user.email,Email.email,Email.java.lang.String,Email]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [user.email,email]; arguments []; default message [email],[Ljavax.validation.constraints.Pattern$Flag;@19f32bdd,.*]; default message [must be a well-formed email address]] ]
-  time: Sat, 21 Aug 2021 20:57:42 UTC
+  message: Congratulations!
+  time: Thu, 09 Sep 2021 14:25:18 UTC
 record: 5

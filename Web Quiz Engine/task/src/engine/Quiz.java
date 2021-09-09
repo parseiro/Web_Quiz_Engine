@@ -3,10 +3,7 @@ package engine;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
@@ -16,9 +13,8 @@ import java.util.stream.Collectors;
 
 @Entity
 public class Quiz {
-    @Column(nullable = false)
     @Id
-    @GeneratedValue(strategy = javax.persistence.GenerationType.IDENTITY)
+    @GeneratedValue
     private Long id;
 
     @NotNull
@@ -90,6 +86,18 @@ public class Quiz {
         this.options = options;
     }*/
 
+    @JoinColumn(nullable = false)
+    @ManyToOne(optional = false)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private AppUser author;
+
+    public void setAuthor(AppUser author) {
+        this.author = author;
+    }
+
+    public AppUser getAuthor() {
+        return author;
+    }
 
 
     @Override
@@ -98,7 +106,9 @@ public class Quiz {
                 "id=" + id +
                 ", title='" + title + '\'' +
                 ", text='" + text + '\'' +
-                ", options='" + getOptions() + '\'' +
+                ", options=" + Arrays.toString(options) +
+                ", answer='" + answer + '\'' +
+                ", author=" + author +
                 '}';
     }
 
